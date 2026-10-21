@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "react-router dev",
-    "build": "react-router build && node scripts/finish-build.mjs",
+    "sync-shaders": "node scripts/sync-kare-shaders.mjs",
+    "dev": "node scripts/sync-kare-shaders.mjs && react-router dev",
+    "build": "node scripts/sync-kare-shaders.mjs && react-router build && node scripts/finish-build.mjs",
     "preview": "wrangler dev",
     "deploy": "bun run build && wrangler deploy",
     "typecheck": "react-router typegen && tsc"
@@ -25,6 +26,7 @@
     "@types/node": "^22",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
+    "@webgpu/types": "^0.1.74",
     "typescript": "^5.9.3",
     "vite": "^8.0.3",
     "wrangler": "^4.151.3"

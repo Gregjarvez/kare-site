@@ -1,14 +1,8 @@
-import { QUAD_VS, SCENE_FS, SIM_FS } from "./shaders";
+import { QUAD_VS, SCENE_FS, SIM_FS } from "./gl-shaders";
 import type { Look } from "./looks";
-
-export type Phase = "idle" | "carving" | "holding" | "passing" | "passed";
-
-type Options = {
-  look: Look;
-  night: boolean;
-  onPhase?: (phase: Phase) => void;
-  onReady?: () => void;
-};
+import { PassClock } from "./pass-clock";
+import { drawStroke, drawWords } from "./text-stamp";
+import { loadHandFont, tidy, type Tray, type TrayOptions } from "./tray";
 
 const SIM = 384;
 const RIN = 1;
@@ -19,7 +13,8 @@ const ROD_SPEED = (Math.PI * 2) / 9;
 
 type Target = { fb: WebGLFramebuffer; tex: WebGLTexture };
 
-export class TrayEngine {
+export class GlTray implements Tray {
+  readonly kind = "gl";
   private gl: WebGL2RenderingContext;
   private sim: WebGLProgram;
   private scene: WebGLProgram;
@@ -30,6 +25,7 @@ export class TrayEngine {
   private strokeCanvas = document.createElement("canvas");
   private encoded: boolean;
   private uniforms = new Map<WebGLProgram, Map<string, WebGLUniformLocation | null>>();
+  private clock: PassClock;
   private raf = 0;
   private last = 0;
   private time = 0;
@@ -41,31 +37,23 @@ export class TrayEngine {
   private elevTarget = 0.92;
   private night = 0;
   private nightTarget = 0;
-  private phase: Phase = "idle";
-  private phaseAt = 0;
   private reveal = 2;
-  private carveSeconds = 2;
-  private passSeconds = 24;
-  private strokeDirty = false;
   private textActive = false;
+  private strokeDirty = false;
   private lastStroke: [number, number] | null = null;
   private look: Look;
-  private onPhase?: (phase: Phase) => void;
-  private onReady?: () => void;
-  private readyFired = false;
   private width = 1;
   private height = 1;
   private scale = 1;
   private center: [number, number] = [0, 0];
 
-  constructor(private canvas: HTMLCanvasElement, options: Options) {
+  constructor(private canvas: HTMLCanvasElement, options: TrayOptions) {
     const gl = canvas.getContext("webgl2", { premultipliedAlpha: true, antialias: false, alpha: true });
     if (!gl) throw new Error("WebGL2 unavailable");
     this.gl = gl;
     this.look = options.look;
     this.night = this.nightTarget = options.night ? 1 : 0;
-    this.onPhase = options.onPhase;
-    this.onReady = options.onReady;
+    this.clock = new PassClock(options.onPhase);
 
     const float = gl.getExtension("EXT_color_buffer_float") || gl.getExtension("EXT_color_buffer_half_float");
     this.encoded = !float;
@@ -107,22 +95,14 @@ export class TrayEngine {
     this.elevTarget = 0.92 - y * 0.06;
   }
 
-  get currentPhase() {
-    return this.phase;
-  }
-
   async inscribe(text: string, passSeconds = 24) {
-    const words = text.trim().replace(/\s+/g, " ");
+    const words = tidy(text);
     if (!words) return;
-    await document.fonts.load('300 48px "Kalam"').catch(() => undefined);
-    this.drawText(words);
+    await loadHandFont();
+    drawWords(this.textCanvas, words, { cx: SIM / 2, cy: SIM / 2, width: SIM * 0.72, height: SIM * 0.62 });
     this.clearState();
     this.upload(this.textTex, this.textCanvas);
-    this.textActive = true;
-    this.reveal = 0;
-    this.carveSeconds = Math.min(3.2, 0.9 + words.length * 0.045);
-    this.passSeconds = passSeconds;
-    this.setPhase("carving");
+    this.clock.begin(words.length, passSeconds);
   }
 
   pointerDown(clientX: number, clientY: number) {
@@ -170,8 +150,7 @@ export class TrayEngine {
 
   destroy() {
     this.stop();
-    this.onPhase = undefined;
-    this.onReady = undefined;
+    this.clock.detach();
   }
 
   resize() {
@@ -190,12 +169,6 @@ export class TrayEngine {
     if (!this.running) this.frame(this.last);
   }
 
-  private setPhase(phase: Phase) {
-    this.phase = phase;
-    this.phaseAt = this.time;
-    this.onPhase?.(phase);
-  }
-
   private frame(now: number) {
     const dt = Math.min(0.1, Math.max(0, (now - this.last) / 1000));
     this.last = now;
@@ -208,34 +181,12 @@ export class TrayEngine {
     const a0 = this.rod;
     const sweep = ROD_SPEED * dt;
     this.rod = (this.rod + sweep) % (Math.PI * 2);
+    const pass = this.clock.tick(dt);
+    this.reveal = pass.reveal;
+    this.textActive = pass.stampText;
 
-    let front = -1;
-    let decay = 0.26;
-    const since = this.time - this.phaseAt;
-    if (this.phase === "carving") {
-      front = 2;
-      this.reveal = Math.min(1.02, since / this.carveSeconds);
-      if (since >= this.carveSeconds + 0.2) {
-        this.textActive = false;
-        this.setPhase("holding");
-      }
-    } else if (this.phase === "holding") {
-      front = 2;
-      if (since > 2.2) this.setPhase("passing");
-    } else if (this.phase === "passing") {
-      front = 1.02 - 1.12 * Math.min(1, since / this.passSeconds);
-      decay = 0.34;
-      if (since > this.passSeconds + 3.5) this.setPhase("passed");
-    } else if (this.phase === "passed" && since > 6) {
-      this.setPhase("idle");
-    }
-
-    this.step(a0, sweep, front, decay);
+    this.step(a0, sweep, pass.front, pass.decay);
     this.draw();
-    if (!this.readyFired) {
-      this.readyFired = true;
-      this.onReady?.();
-    }
   }
 
   private step(a0: number, sweep: number, front: number, decay: number) {
@@ -326,52 +277,9 @@ export class TrayEngine {
   }
 
   private strokeTo(uv: [number, number]) {
-    const ctx = this.strokeCanvas.getContext("2d")!;
-    const from = this.lastStroke ?? uv;
-    ctx.strokeStyle = "rgba(255,0,0,1)";
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.lineWidth = SIM * 0.022;
-    ctx.beginPath();
-    ctx.moveTo(from[0], from[1]);
-    ctx.lineTo(uv[0] + 0.01, uv[1]);
-    ctx.stroke();
+    drawStroke(this.strokeCanvas, this.lastStroke ?? uv, uv, SIM * 0.022);
     this.lastStroke = uv;
     this.strokeDirty = true;
-  }
-
-  private drawText(text: string) {
-    const ctx = this.textCanvas.getContext("2d")!;
-    ctx.clearRect(0, 0, SIM, SIM);
-    const maxWidth = SIM * 0.72;
-    let size = SIM * 0.2;
-    let lines: string[] = [];
-    for (; size > SIM * 0.05; size *= 0.92) {
-      ctx.font = `300 ${size}px "Kalam", cursive`;
-      lines = wrap(ctx, text, maxWidth);
-      const height = lines.length * size * 1.02;
-      const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
-      if (lines.length <= 4 && height < SIM * 0.62 && widest <= maxWidth) break;
-    }
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    const lineHeight = size * 1.02;
-    const top = SIM / 2 - ((lines.length - 1) * lineHeight) / 2;
-    lines.forEach((line, i) => {
-      const w = ctx.measureText(line).width;
-      const x0 = SIM / 2 - w / 2;
-      const gradient = ctx.createLinearGradient(x0, 0, x0 + w, 0);
-      const g0 = Math.round((i / lines.length) * 250);
-      const g1 = Math.round(((i + 1) / lines.length) * 250);
-      gradient.addColorStop(0, `rgb(255,${g0},0)`);
-      gradient.addColorStop(1, `rgb(255,${g1},0)`);
-      ctx.fillStyle = gradient;
-      ctx.strokeStyle = gradient;
-      ctx.lineWidth = size * 0.05;
-      ctx.lineJoin = "round";
-      ctx.fillText(line, SIM / 2, top + i * lineHeight);
-      ctx.strokeText(line, SIM / 2, top + i * lineHeight);
-    });
   }
 
   private clearState() {
@@ -466,19 +374,4 @@ export class TrayEngine {
   private set3f(p: WebGLProgram, n: string, v: readonly [number, number, number]) {
     this.gl.uniform3f(this.loc(p, n), v[0], v[1], v[2]);
   }
-}
-
-function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
-  const words = text.split(" ");
-  const lines: string[] = [];
-  let line = "";
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (ctx.measureText(next).width > maxWidth && line) {
-      lines.push(line);
-      line = word;
-    } else line = next;
-  }
-  if (line) lines.push(line);
-  return lines;
 }

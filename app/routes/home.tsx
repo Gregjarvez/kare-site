@@ -11,7 +11,7 @@ import { SandTray, type SandTrayHandle } from "~/components/sand-tray";
 import { SiteFooter } from "~/components/site-footer";
 import { SiteHeader } from "~/components/site-header";
 import { RODS, SANDS, TRAYS, look } from "~/sand/looks";
-import type { Phase } from "~/sand/tray-engine";
+import type { Phase } from "~/sand/pass-clock";
 import { pageMeta } from "~/site";
 import "~/styles/home.css";
 
@@ -59,7 +59,7 @@ function Hero({ onPassed }: { onPassed: () => void }) {
   const [text, setText] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [night, setNight] = useState(false);
-  const heroLook = useMemo(() => look("ivory", "walnut", "brass"), []);
+  const heroLook = useMemo(() => look("ivory", "walnut", "steel"), []);
   const busy = phase === "carving";
 
   const submit = (e: React.FormEvent) => {
@@ -123,7 +123,7 @@ function Hero({ onPassed }: { onPassed: () => void }) {
             passSeconds={30}
             followPointer
             fallback="/media/hero-tray.webp"
-            label="A walnut tray of ivory sand. Words written in it are slowly raked away by a turning brass rod."
+            label="A walnut tray of ivory sand. Words written in it are slowly raked away by a turning steel rod."
             className="hero-tray"
             onPhase={(p) => {
               setPhase(p);

@@ -224,8 +224,8 @@ void main() {
     n.xz = rot(uYaw) * n.xz;
 
     vec3 base = uSand * (0.9 + 0.2 * hash(cell + 3.1));
-    if (h < 0.1) base = uSandTint;
-    else if (h < 0.135) base = uSandDark;
+    if (h < 0.1) base *= uSandTint;
+    else if (h < 0.135) base *= uSandDark;
     float clear_ = step(0.985, h);
     base = mix(base, uSandClear, clear_ * 0.5);
     base *= 0.94 + 0.12 * noise(p * 9.0);

@@ -1,6 +1,6 @@
 export const APP_STORE_URL = "https://apps.apple.com/app/id6822525559";
 export const CONTACT_EMAIL = "gregjarvez@gmail.com";
-export const SITE_URL = "https://kare-site.gregjarvez.workers.dev";
+export const SITE_URL = "https://kare.fyi";
 
 export function pageMeta(title: string, description: string, path: string) {
   return [

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll, useTransform } from "motion/react";
 import { Link } from "react-router";
 
@@ -7,11 +7,9 @@ import { AppStoreButton } from "~/components/app-store-button";
 import { MarbleGarden } from "~/components/marble-garden";
 import { Phone, Shot } from "~/components/phone";
 import { Reveal } from "~/components/reveal";
-import { SandTray, type SandTrayHandle } from "~/components/sand-tray";
 import { SiteFooter } from "~/components/site-footer";
 import { SiteHeader } from "~/components/site-header";
-import { RODS, SANDS, TRAYS, look } from "~/sand/looks";
-import type { Phase } from "~/sand/pass-clock";
+import { BASE_LOOK, LOOK_ROWS, lookName, lookStill, type LookKind } from "~/sand/looks";
 import { pageMeta } from "~/site";
 import "~/styles/home.css";
 
@@ -23,7 +21,20 @@ export function meta({}: Route.MetaArgs) {
   );
 }
 
-const STARTER = "what if I'm not enough";
+const HERO_BEATS = [
+  { at: 0, line: "It goes into the sand.", caption: "A few words are enough", passed: false },
+  { at: 5.3, line: "Hold to let it go.", caption: "The rod starts to turn", passed: false },
+  { at: 8.5, line: "The sand slowly smooths it away.", caption: "You don't have to watch", passed: false },
+  { at: 17.6, line: "It has passed.", caption: "A marble for your garden", passed: true },
+];
+
+function beatAt(time: number) {
+  let at = 0;
+  HERO_BEATS.forEach((beat, i) => {
+    if (time >= beat.at) at = i;
+  });
+  return at;
+}
 
 export default function Home() {
   const [marbles, setMarbles] = useState(9);
@@ -46,28 +57,32 @@ export default function Home() {
   );
 }
 
-const PHASE_LINES: Record<Phase, { line: string; caption: string }> = {
-  idle: { line: "Draw in the sand, or write something down.", caption: "Try it here" },
-  carving: { line: "Into the sand.", caption: "" },
-  holding: { line: "It's in the sand now.", caption: "" },
-  passing: { line: "It's passing.", caption: "You don't have to watch" },
-  passed: { line: "It has passed.", caption: "A marble for your garden" },
-};
-
 function Hero({ onPassed }: { onPassed: () => void }) {
-  const tray = useRef<SandTrayHandle>(null);
-  const [text, setText] = useState("");
-  const [phase, setPhase] = useState<Phase>("idle");
+  const day = useRef<HTMLVideoElement>(null);
+  const dark = useRef<HTMLVideoElement>(null);
   const [night, setNight] = useState(false);
-  const heroLook = useMemo(() => look("ivory", "walnut", "steel"), []);
-  const busy = phase === "carving";
+  const [beat, setBeat] = useState(0);
+  const beatRef = useRef(0);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim() || busy) return;
-    tray.current?.inscribe(text, 22);
-    setText("");
+  const follow = (video: HTMLVideoElement) => {
+    const next = beatAt(video.currentTime);
+    if (next === beatRef.current) return;
+    beatRef.current = next;
+    setBeat(next);
+    if (HERO_BEATS[next].passed) onPassed();
   };
+
+  const toggle = () => {
+    const from = night ? dark.current : day.current;
+    const to = night ? day.current : dark.current;
+    if (from && to) {
+      to.currentTime = from.currentTime;
+      void to.play().catch(() => undefined);
+    }
+    setNight((n) => !n);
+  };
+
+  const shown = HERO_BEATS[beat];
 
   return (
     <section className="hero" data-night={night}>
@@ -111,84 +126,80 @@ function Hero({ onPassed }: { onPassed: () => void }) {
 
         <motion.div
           className="hero-stage"
-          initial={{ opacity: 0, scale: 0.96 }}
+          initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.6, delay: 0.15, ease: [0.23, 1, 0.32, 1] }}
         >
-          <SandTray
-            ref={tray}
-            look={heroLook}
-            night={night}
-            initialText={STARTER}
-            passSeconds={30}
-            followPointer
-            fallback="/media/hero-tray.webp"
-            label="A walnut tray of ivory sand. Words written in it are slowly raked away by a turning steel rod."
-            className="hero-tray"
-            onPhase={(p) => {
-              setPhase(p);
-              if (p === "passed") onPassed();
-            }}
-          />
+          <div className="scene">
+            <video
+              ref={day}
+              className="scene-video"
+              data-shown={!night}
+              src="/media/tray-day.mp4"
+              poster="/media/tray-day.webp"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              aria-label="Recorded in Kare: “what if I'm not enough” is written into the sand, raked away by the turning rod, and becomes a marble"
+              onTimeUpdate={(e) => !night && follow(e.currentTarget)}
+            />
+            <video
+              ref={dark}
+              className="scene-video"
+              data-shown={night}
+              src="/media/tray-night.mp4"
+              poster="/media/tray-night.webp"
+              muted
+              loop
+              playsInline
+              preload="none"
+              aria-hidden="true"
+              onTimeUpdate={(e) => night && follow(e.currentTarget)}
+            />
+            <button
+              type="button"
+              className="moon"
+              aria-pressed={night}
+              aria-label={night ? "Day light" : "Night light"}
+              onClick={toggle}
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                {night ? (
+                  <g fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <circle cx="12" cy="12" r="4.2" />
+                    <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" />
+                  </g>
+                ) : (
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                    d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1Z"
+                  />
+                )}
+              </svg>
+            </button>
+          </div>
           <div className="hero-status" aria-live="polite">
             <AnimatePresence mode="wait">
               <motion.div
-                key={phase}
+                key={beat}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
               >
-                <p className="hero-status-line">{PHASE_LINES[phase].line}</p>
-                {PHASE_LINES[phase].caption && <p className="caption">{PHASE_LINES[phase].caption}</p>}
+                <p className="hero-status-line">{shown.line}</p>
+                <p className="caption">{shown.caption}</p>
               </motion.div>
             </AnimatePresence>
           </div>
-          <form className="composer" onSubmit={submit}>
-            <label className="visually-hidden" htmlFor="thought">
-              What would you like to let go of?
-            </label>
-            <input
-              id="thought"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              maxLength={60}
-              placeholder="What would you like to let go of?"
-              autoComplete="off"
-              enterKeyHint="done"
-            />
-            <button className="pill" type="submit" disabled={!text.trim() || busy}>
-              Into the sand
-            </button>
-          </form>
-          <button
-            type="button"
-            className="moon"
-            aria-pressed={night}
-            aria-label={night ? "Day light" : "Night light"}
-            onClick={() => setNight((n) => !n)}
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-              {night ? (
-                <g fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <circle cx="12" cy="12" r="4.2" />
-                  <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" />
-                </g>
-              ) : (
-                <path
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                  d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1Z"
-                />
-              )}
-            </svg>
-          </button>
-          <p className="visually-hidden">Words you write here stay in this page. Nothing is sent anywhere.</p>
         </motion.div>
       </div>
-      <p className="hero-privacy caption">Nothing you write here leaves this page</p>
+      <p className="hero-privacy caption">Recorded in Kare, sped up</p>
     </section>
   );
 }
@@ -286,8 +297,8 @@ function Garden({ count }: { count: number }) {
           <p className="caption">A little sand garden</p>
           <h2 id="garden-title">Every thought you let go leaves a marble.</h2>
           <p>
-            They gather in a wooden garden, one for each thing you've put down, and roll when you tilt your phone. Let
-            something go in the tray above and a new one will join them.
+            They gather in a wooden garden, one for each thing you've put down, and roll when you tilt your phone. Each
+            time a thought passes in the tray above, a new one joins them here.
           </p>
           <p className="garden-count caption">
             {count} {count === 1 ? "marble" : "marbles"} so far
@@ -368,87 +379,51 @@ function PitsAndSounds() {
   );
 }
 
-function Swatches<T extends { id: string; name: string }>({
-  label,
-  items,
-  value,
-  onChange,
-  paint,
-}: {
-  label: string;
-  items: T[];
-  value: string;
-  onChange: (id: string) => void;
-  paint: (item: T) => React.CSSProperties;
-}) {
-  return (
-    <fieldset className="swatches">
-      <legend className="caption">{label}</legend>
-      <div className="swatch-row">
-        {items.map((item) => (
-          <label key={item.id} className="swatch" title={item.name}>
-            <input
-              type="radio"
-              name={label}
-              value={item.id}
-              checked={value === item.id}
-              onChange={() => onChange(item.id)}
-            />
-            <span className="swatch-chip" style={paint(item)} />
-            <span className="swatch-name">{item.name}</span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
-
 function Looks() {
-  const [sand, setSand] = useState("marble");
-  const [tray, setTray] = useState("oak");
-  const [rod, setRod] = useState("steel");
-  const current = useMemo(() => look(sand, tray, rod), [sand, tray, rod]);
+  const [chosen, setChosen] = useState<{ kind: LookKind; id: string }>({ kind: "sand", id: BASE_LOOK.sand });
   return (
     <section className="looks" aria-labelledby="looks-title">
       <div className="wrap looks-grid">
         <Reveal className="looks-copy">
           <p className="caption">Make it yours</p>
           <h2 id="looks-title">Eight sands. Eight trays. Six rods.</h2>
-          <p>Pick the ones that feel calm to you. Try them here.</p>
-          <Swatches
-            label="Sand"
-            items={SANDS}
-            value={sand}
-            onChange={setSand}
-            paint={(s) => ({ backgroundImage: `url(${s.swatch})` })}
-          />
-          <Swatches
-            label="Tray"
-            items={TRAYS}
-            value={tray}
-            onChange={setTray}
-            paint={(t) => ({ background: `radial-gradient(circle at 35% 30%, ${t.swatch[0]}, ${t.swatch[1]})` })}
-          />
-          <Swatches
-            label="Rod"
-            items={RODS}
-            value={rod}
-            onChange={setRod}
-            paint={(r) => ({ background: `linear-gradient(135deg, ${r.swatch[0]}, ${r.swatch[1]})` })}
-          />
+          <p>Pick the ones that feel calm to you. Each one here is how it looks in Kare.</p>
+          {LOOK_ROWS.map((row) => (
+            <fieldset key={row.kind} className="swatches">
+              <legend className="caption">{row.label}</legend>
+              <div className="swatch-row">
+                {row.items.map((item) => (
+                  <label key={item.id} className="swatch" title={item.name}>
+                    <input
+                      type="radio"
+                      name="look"
+                      value={`${row.kind}-${item.id}`}
+                      checked={chosen.kind === row.kind && chosen.id === item.id}
+                      onChange={() => setChosen({ kind: row.kind, id: item.id })}
+                    />
+                    <span className="swatch-chip" style={{ background: item.swatch, backgroundSize: "cover" }} />
+                    <span className="swatch-name">{item.name}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ))}
         </Reveal>
         <Reveal className="looks-stage" delay={0.1}>
-          <SandTray
-            look={current}
-            initialText="let it go"
-            passSeconds={40}
-            fallback="/media/hero-tray.webp"
-            label={`A ${current.tray.name.toLowerCase()} tray of ${current.sand.name.toLowerCase()} sand with a ${current.rod.name.toLowerCase()} rod`}
-            className="looks-tray"
-          />
-          <p className="caption looks-name">
-            {current.sand.name} · {current.tray.name} · {current.rod.name}
-          </p>
+          <div className="look-still">
+            <AnimatePresence initial={false}>
+              <motion.img
+                key={`${chosen.kind}-${chosen.id}`}
+                src={lookStill(chosen.kind, chosen.id)}
+                alt={`A tray in Kare: ${lookName(chosen.kind, chosen.id)}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+              />
+            </AnimatePresence>
+          </div>
+          <p className="caption looks-name">{lookName(chosen.kind, chosen.id)}</p>
         </Reveal>
       </div>
     </section>

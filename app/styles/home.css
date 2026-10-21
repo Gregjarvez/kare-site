@@ -90,48 +90,44 @@
   align-items: center;
 }
 
-.sand-tray {
+.scene {
   position: relative;
   width: 100%;
+  max-width: 600px;
+  aspect-ratio: 1206 / 1180;
+  border-radius: 34px;
+  overflow: hidden;
+  background: #5b4a3d;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 50px 90px -50px rgba(46, 30, 18, 0.65),
+    0 22px 40px -26px rgba(46, 30, 18, 0.45);
+  isolation: isolate;
 }
 
-.sand-tray canvas {
-  width: 100%;
-  height: 100%;
-  mask-image: radial-gradient(closest-side, #000 82%, transparent);
-  -webkit-mask-image: radial-gradient(closest-side, #000 82%, transparent);
-  touch-action: none;
-  opacity: 0;
-  transition: opacity 1.4s var(--ease-out);
-}
-
-.sand-tray[data-state="ready"] canvas {
-  opacity: 1;
-}
-
-.sand-tray[data-engine="gpu"] canvas {
-  transition: opacity 1.4s var(--ease-out), filter 1.6s var(--ease-out);
-}
-
-.hero[data-night="true"] .sand-tray[data-engine="gpu"] canvas {
-  filter: brightness(0.62) sepia(0.22) saturate(1.05);
-}
-
-.sand-tray-fallback {
+.scene-video {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 28px;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-out);
 }
 
-.hero-tray {
-  aspect-ratio: 1.22 / 1;
-  max-width: 700px;
+.scene-video[data-shown="true"] {
+  opacity: 1;
+}
+
+.scene .moon {
+  top: 16px;
+  right: 16px;
+  color: var(--dusk-ink);
+  background: rgba(30, 22, 16, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(246, 239, 230, 0.22);
 }
 
 .hero-status {
   min-height: 62px;
-  margin-top: -4px;
+  margin-top: 22px;
   text-align: center;
 }
 
@@ -142,66 +138,6 @@
 
 .hero-status .caption {
   margin-top: 4px;
-}
-
-.composer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: min(100%, 520px);
-  margin-top: 10px;
-  padding: 7px 7px 7px 22px;
-  border-radius: 999px;
-  background: var(--surface);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 18px 40px -24px rgba(50, 34, 20, 0.5),
-    0 0 0 1px color-mix(in srgb, var(--line) 70%, transparent);
-  transition: background 1.2s var(--ease-out), box-shadow 0.3s;
-}
-
-.composer:focus-within {
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 18px 40px -24px rgba(50, 34, 20, 0.5),
-    0 0 0 1.5px color-mix(in srgb, var(--clay) 60%, transparent);
-}
-
-.composer input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: var(--text);
-  font-family: var(--hand);
-  font-weight: 300;
-  font-size: 21px;
-  padding: 6px 0;
-}
-
-.composer input::placeholder {
-  color: var(--text-faint);
-  opacity: 0.8;
-}
-
-.composer .pill {
-  min-height: 44px;
-  padding: 0 20px;
-  white-space: nowrap;
-}
-
-.hero[data-night="true"] .composer {
-  background: rgba(46, 38, 31, 0.86);
-}
-
-.hero[data-night="true"] .composer input {
-  color: var(--dusk-ink);
-}
-
-.hero[data-night="true"] .composer input::placeholder {
-  color: var(--dusk-faint);
-}
-
-.hero[data-night="true"] .composer .pill {
-  background: var(--dusk-ink);
-  color: var(--espresso);
 }
 
 .moon {
@@ -621,13 +557,27 @@
   align-items: center;
 }
 
-.looks-tray {
-  aspect-ratio: 1.22 / 1;
-  max-width: 620px;
+.look-still {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 1206 / 1250;
+  border-radius: 30px;
+  overflow: hidden;
+  background: #e2dacd;
+  box-shadow: 0 40px 70px -46px rgba(46, 30, 18, 0.55);
+}
+
+.look-still img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .looks-name {
-  margin-top: 4px;
+  margin-top: 16px;
 }
 
 /* Private */
@@ -805,10 +755,6 @@
     justify-content: center;
   }
 
-  .hero-tray {
-    margin-top: 8px;
-  }
-
   .steps-track {
     display: none;
   }
@@ -894,7 +840,7 @@
     height: 40px;
   }
 
-  .looks-tray {
+  .look-still {
     max-width: 420px;
   }
 
@@ -909,18 +855,6 @@
 }
 
 @media (max-width: 560px) {
-  .composer {
-    flex-direction: column;
-    align-items: stretch;
-    border-radius: 26px;
-    padding: 12px;
-  }
-
-  .composer input {
-    padding: 4px 10px 8px;
-    text-align: center;
-  }
-
   .private-list {
     grid-template-columns: 1fr;
   }

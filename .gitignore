@@ -8,5 +8,3 @@ build
 !.env.example
 .DS_Store
 
-# Kare's scene shaders, copied in from the app by scripts/sync-kare-shaders.mjs
-app/sand/kare

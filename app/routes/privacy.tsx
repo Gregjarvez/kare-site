@@ -169,8 +169,7 @@ const sections: Section[] = [
     body: (
       <p>
         This site sets no cookies and runs no analytics. Like any website, it is delivered by a host, Cloudflare, which
-        sees your IP address and the page you asked for in order to send it. Anything you write into the sand on our
-        home page stays in your browser and is never sent.
+        sees your IP address and the page you asked for in order to send it.
       </p>
     ),
   },

@@ -20,5 +20,5 @@ bun run preview   # serves build/client through wrangler, as in production
 bun run deploy    # build, then wrangler deploy
 ```
 
-Served as static assets by a Cloudflare Worker at https://kare-site.gregjarvez.workers.dev. Pushing does not
+Served as static assets by a Cloudflare Worker at https://kare.fyi (and www.kare.fyi; the old https://kare-site.gregjarvez.workers.dev still works). Pushing does not
 deploy; run `bun run deploy`.

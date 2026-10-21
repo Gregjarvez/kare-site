@@ -457,7 +457,7 @@ function Looks() {
 
 const PROMISES = [
   ["No account", "Open it and write. There's nothing to sign up for."],
-  ["No analytics", "We don't count what you do in Kare, or how often."],
+  ["Counts, never words", "Kare notes which parts get used, anonymously. One switch in Settings stops it."],
   ["No ads, no tracking", "Nothing follows you in or out of the app."],
   ["Stays on your phone", "What you write is never sent anywhere, and is deleted once it passes."],
 ];

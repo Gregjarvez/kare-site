@@ -13,7 +13,7 @@ const sections: Section[] = [
     body: (
       <>
         <p>
-          Kare has no accounts, no analytics, no advertising and no tracking. We don't run any servers, and nothing you
+          Kare has no accounts, no advertising and no tracking across apps. We don't run any servers, and nothing you
           write is ever sent to us or anyone else.
         </p>
         <p>Everything the app keeps is stored in its own folder on your phone:</p>
@@ -125,6 +125,45 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "usage",
+    title: "Usage statistics",
+    body: (
+      <>
+        <p>
+          To learn which parts of Kare help, the app sends anonymous usage statistics to{" "}
+          <a href="https://posthog.com/">PostHog</a>, an analytics service, which stores them in the United States. They
+          say what happened in the app, never what you wrote:
+        </p>
+        <ul>
+          <li>
+            that a thought was written, let go or passed, and how heavy you said it was; that sand was cleared, or a sand
+            pit added or removed, and how many you have;
+          </li>
+          <li>
+            which sand, tray, rod, sound and breathing you choose, which screens and sheets you open, and when you use
+            night mode or a widget;
+          </li>
+          <li>
+            whether you allowed notifications or turned the reminder on, when Kare asks for a rating, when the Kare
+            Premium screen is shown, and whether a purchase or restore went through;
+          </li>
+          <li>when the app is installed, opened and closed.</li>
+        </ul>
+        <p>
+          Each comes with the app's version, your phone's model and system version, its language and time zone, and a
+          random identifier for this install of Kare. That identifier isn't linked to your name, email, Apple ID or the
+          one RevenueCat uses, and Kare never builds a profile of you. As with any request, PostHog sees your IP address;
+          Kare asks it not to work out your location, and PostHog doesn't store the address. Statistics are handled
+          under the <a href="https://posthog.com/privacy">PostHog Privacy Policy</a>.
+        </p>
+        <p>
+          You can turn usage statistics off at any time in Kare's settings, with Share anonymous usage. Nothing more is
+          sent after that.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "links",
     title: "Links",
     body: (
@@ -141,8 +180,8 @@ const sections: Section[] = [
     title: "Children",
     body: (
       <p>
-        Kare isn't directed at children under 13, and Kare itself collects no personal information from anyone, of any
-        age.
+        Kare isn't directed at children under 13. It never asks anyone, of any age, for an email, an account or
+        anything else that says who they are, and nothing that does ever leaves the phone.
       </p>
     ),
   },
@@ -152,8 +191,11 @@ const sections: Section[] = [
     body: (
       <>
         <p>
-          Start over, in Kare's settings, deletes your sand, marbles, name and choices at once. Deleting Kare from your
-          phone deletes everything it kept. Any backups you have made keep their copy until you delete those backups.
+          Start over, in Kare's settings, deletes your sand, marbles, name and choices at once, and gives Kare a new
+          random identifier for usage statistics, so what is sent afterwards can't be tied to what was sent before.
+          Deleting Kare from your phone deletes everything it kept. Any backups you have made keep their copy until you
+          delete those backups. Usage statistics already sent carry nothing that says who you are, so we can't pick
+          yours out afterwards.
         </p>
         <p>
           Kare Premium belongs to your Apple Account, so neither of these loses it: choose Restore in Kare's settings to
@@ -193,7 +235,7 @@ const sections: Section[] = [
 export default function Privacy() {
   return (
     <LegalPage
-      eyebrow="Kare · Effective 21 October 2026"
+      eyebrow="Kare · Effective 22 October 2026"
       title="Privacy"
       lede="Your thoughts stay on your phone. Once a thought has passed, its words are gone."
       sections={sections}

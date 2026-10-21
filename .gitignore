@@ -1,6 +1,12 @@
-# wrangler files
+node_modules
+build
+.react-router
 .wrangler
 .dev.vars*
 !.dev.vars.example
 .env*
 !.env.example
+.DS_Store
+
+# Kare's scene shaders, copied in from the app by scripts/sync-kare-shaders.mjs
+app/sand/kare

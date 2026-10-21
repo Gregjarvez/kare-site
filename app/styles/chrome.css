@@ -1,0 +1,116 @@
+.site-header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 20;
+  padding-top: env(safe-area-inset-top);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+  transition: background 1.2s var(--ease-out), color 1.2s var(--ease-out);
+}
+
+.site-header-inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wordmark {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 23px;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+}
+
+.site-header nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 3vw, 28px);
+  font-size: 14.5px;
+}
+
+.site-header nav a {
+  text-decoration: none;
+  color: var(--text-soft);
+  transition: color 0.2s;
+}
+
+.site-header nav a:hover,
+.site-header nav a.active {
+  color: var(--text);
+}
+
+.site-header .header-get {
+  color: var(--text);
+  padding: 7px 15px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Footer */
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 56px 0 calc(48px + env(safe-area-inset-bottom));
+}
+
+.site-footer-inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 28px 40px;
+}
+
+.footer-mark p {
+  color: var(--text-faint);
+  margin-top: 4px;
+  font-family: var(--serif);
+}
+
+.site-footer nav {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  font-size: 15px;
+}
+
+.site-footer nav a {
+  text-decoration: none;
+  color: var(--text-soft);
+}
+
+.site-footer nav a:hover {
+  color: var(--text);
+}
+
+.footer-note {
+  grid-column: 1 / -1;
+  max-width: 620px;
+  color: var(--text-faint);
+  font-size: 15px;
+}
+
+.footer-legal {
+  grid-column: 1 / -1;
+  font-size: 10.5px;
+}
+
+@media (max-width: 560px) {
+  body {
+    font-size: 16px;
+  }
+
+  .site-header nav a:not(.header-get) {
+    display: none;
+  }
+
+  .site-footer-inner {
+    grid-template-columns: 1fr;
+  }
+}

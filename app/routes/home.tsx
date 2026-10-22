@@ -236,7 +236,9 @@ function Steps() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const [active, setActive] = useState(0);
   const progress = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-  useMotionValueEvent(scrollYProgress, "change", (v) => setActive(Math.min(STEPS.length - 1, Math.floor(v * STEPS.length))));
+  useMotionValueEvent(scrollYProgress, "change", (v) =>
+    setActive(Math.min(STEPS.length - 1, Math.floor(v * STEPS.length))),
+  );
 
   return (
     <section className="steps" aria-labelledby="steps-title">
@@ -357,8 +359,8 @@ function PitsAndSounds() {
           <p className="caption">Sand pits</p>
           <h3>One for each part of your life.</h3>
           <p>
-            With Kare Premium, keep separate sand pits for work, home or the people you love. Each one just counts the thoughts that have
-            passed through it. Nothing else.
+            With Kare Premium, keep separate sand pits for work, home or the people you love. Each one just counts the
+            thoughts that have passed through it. Nothing else.
           </p>
         </Reveal>
         <Reveal className="pair-card" delay={0.12}>
@@ -432,7 +434,7 @@ function Looks() {
 
 const PROMISES = [
   ["No account", "Open it and write. There's nothing to sign up for."],
-  ["No analytics", "We don't count what you do in Kare, or how often."],
+  ["Only anonymous counts", "Kare counts which parts get used, never what you write. Switch it off in Settings."],
   ["No ads, no tracking", "Nothing follows you in or out of the app."],
   ["Stays on your phone", "What you write is never sent anywhere, and is deleted once it passes."],
 ];

@@ -13,8 +13,8 @@ const sections: Section[] = [
     body: (
       <>
         <p>
-          Kare has no accounts, no analytics, no advertising and no tracking. We don't run any servers, and nothing you
-          write is ever sent to us or anyone else.
+          Kare has no accounts, no advertising and no tracking. We don't run any servers, and nothing you write is ever
+          sent to us or anyone else. Kare does send anonymous usage events, described below, unless you turn them off.
         </p>
         <p>Everything the app keeps is stored in its own folder on your phone:</p>
         <ul>
@@ -36,8 +36,8 @@ const sections: Section[] = [
         </p>
         <p>
           Kare gives its widgets and its Live Activity a small summary to show on your Home Screen and Lock Screen: a
-          sand pit's name, whether it holds a thought, how many have passed and your marbles. Never the words. That stays
-          on your phone too.
+          sand pit's name, whether it holds a thought, how many have passed and your marbles. Never the words. That
+          stays on your phone too.
         </p>
       </>
     ),
@@ -57,8 +57,8 @@ const sections: Section[] = [
     title: "Motion and sound",
     body: (
       <p>
-        Kare reads your phone's motion sensors so the marbles in your garden roll as you tilt it. These readings are used
-        in the moment and are never stored or sent. Kare plays sound but never uses the microphone.
+        Kare reads your phone's motion sensors so the marbles in your garden roll as you tilt it. These readings are
+        used in the moment and are never stored or sent. Kare plays sound but never uses the microphone.
       </p>
     ),
   },
@@ -81,6 +81,35 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "usage",
+    title: "Anonymous usage",
+    body: (
+      <>
+        <p>
+          To learn which parts of Kare help, the app sends anonymous usage events to{" "}
+          <a href="https://posthog.com/">PostHog</a>, an analytics service, on its servers in the United States. An
+          event records that something happened, for example: a thought written, let go or passed and how heavy you said
+          it was; a sand, tray, rod, sound or breathing pace chosen; a sand pit added or removed; a screen opened; the
+          Kare Premium screen shown, or a purchase or restore finished; and the app being opened or closed.
+        </p>
+        <p>
+          With each event go a random identifier the app makes up for this install, the app's version, your phone's
+          model and system version, its language and time zone. As with any request, your IP address reaches PostHog; it
+          is not stored and is not used to work out where you are.
+        </p>
+        <p>
+          Events never include your words, the name you're greeted by, your sand pit names or anything that says who you
+          are. They aren't linked to you, aren't used to track you, and PostHog keeps no profile of you. Their use is
+          covered by the <a href="https://posthog.com/privacy">PostHog Privacy Policy</a>.
+        </p>
+        <p>
+          Share anonymous usage is on until you turn it off, in the Support part of Kare's settings. With it off,
+          nothing is sent. Start over gives the app a new random identifier.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "premium",
     title: "Kare Premium",
     body: (
@@ -92,8 +121,8 @@ const sections: Section[] = [
         </p>
         <p>
           To know whether you have Kare Premium, Kare uses <a href="https://www.revenuecat.com/">RevenueCat</a>, a
-          purchase service. When the app opens, and when you look at Kare Premium, buy or restore, it contacts RevenueCat
-          with:
+          purchase service. When the app opens, and when you look at Kare Premium, buy or restore, it contacts
+          RevenueCat with:
         </p>
         <ul>
           <li>a random identifier the app makes up. It isn't linked to your name, email or Apple ID;</li>
@@ -160,6 +189,10 @@ const sections: Section[] = [
           bring it back. To ask RevenueCat to delete the purchase records tied to your random identifier, write to us
           and we'll pass the request on.
         </p>
+        <p>
+          Usage events can't be traced back to you, so we can't find one person's events to delete them. Turning off
+          Share anonymous usage stops any more being sent.
+        </p>
       </>
     ),
   },
@@ -192,7 +225,7 @@ const sections: Section[] = [
 export default function Privacy() {
   return (
     <LegalPage
-      eyebrow="Kare · Effective 21 October 2026"
+      eyebrow="Kare · Effective 22 October 2026"
       title="Privacy"
       lede="Your thoughts stay on your phone. Once a thought has passed, its words are gone."
       sections={sections}
